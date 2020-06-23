@@ -1,0 +1,35 @@
+- hosts: localhost
+  become: true
+  tasks:
+    - name: Create a new primary partition
+      parted:
+        device: /dev/sdg
+        number: 1
+        state: present
+    - name: Create a new xfs filesystem on the partition
+      filesystem:
+        fstype: xfs
+        dev: /dev/sdg1
+    - name: Create fstab entry and mount filesystem
+      mount:
+        path: /var/www/html
+        src: /dev/sdg1
+        fstype: xfs
+        opts: defaults
+        state: mounted
+    - name: Install Apache
+      yum:
+        name: httpd
+        state: latest
+    - name: Start/enable Apache service
+      service:
+        name: httpd
+        enabled: yes
+        state: started
+    - name: Copy index.html to DocumentRoot directory
+      copy:
+        src: index.html
+        dest: /var/www/html/index.html
+        owner: apache
+        group: apache
+        mode: '0644'
